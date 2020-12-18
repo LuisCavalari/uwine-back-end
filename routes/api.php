@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WineController;
+use App\Http\Controllers\AuthController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -15,8 +16,6 @@ use App\Http\Controllers\WineController;
 */
 
 
-Route::resource('wines',WineController::class);
+Route::resource('wines',WineController::class)->middleware('apiProtected');
+Route::post('auth/login', [AuthController::class,'login']);
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
