@@ -67,7 +67,7 @@ class WineController extends Controller
                 ->get();
             $result = ['data' => $wine, 'status' => 200];
         } catch (\Exception $exception) {
-            $result = ['message' => 'Houve um erro ao buscar pelo vinho'];
+            $result = ['message' => 'Houve um erro ao buscar pelo vinho', 'status' => 500];
         }
         return response()->json($result, $result['status']);
     }
@@ -89,15 +89,15 @@ class WineController extends Controller
             if ($wine['user_id'] === $userId) {
                 $wine->fill($updatedWineData);
                 $wine->save();
-                return response()->json(['ok' => true]);
+                return response()->json(['message' => 'Vinho atualizado com sucesso']);
             } else {
-                return response()->json(['message' => 'Você não tem permissão para alterar este dado'],401);
+                return response()->json(['message' => 'Você não tem permissão para alterar este dado'], 401);
             }
         } catch (\Exception $exception) {
-            if($exception instanceof ModelNotFoundException) {
-                return response()->json(['message' => 'Vinho não encontrado'],404);
+            if ($exception instanceof ModelNotFoundException) {
+                return response()->json(['message' => 'Vinho não encontrado'], 404);
             }
-            return response()->json(['message' => 'Houve um erro na hora de alterar este dado'],500);
+            return response()->json(['message' => 'Houve um erro na hora de alterar este dado'], 500);
         }
     }
 
@@ -112,19 +112,17 @@ class WineController extends Controller
         try {
             $wine = $this->wine->findOrFail($id);
             $userId = auth('api')->user()->id;
-            if($wine['user_id']=== $userId) {
+            if ($wine['user_id'] === $userId) {
                 $wine->delete();
                 return response()->json(['message' => 'Vinho deletado com sucesso']);
             } else {
-                return response()->json(['message' => 'Você não tem permissão para alterar este dado'],401);
+                return response()->json(['message' => 'Você não tem permissão para alterar este dado'], 401);
             }
         } catch (\Exception $exception) {
-            if($exception instanceof ModelNotFoundException) {
-                return response()->json(['message' => 'Vinho não encontrado'],404);
+            if ($exception instanceof ModelNotFoundException) {
+                return response()->json(['message' => 'Vinho não encontrado'], 404);
             }
-            return response()->json(['message' => 'Houve um erro na hora de alterar este dado'],500);
+            return response()->json(['message' => 'Houve um erro na hora de alterar este dado'], 500);
         }
-        
-
     }
 }

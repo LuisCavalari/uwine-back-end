@@ -24,11 +24,11 @@ class ApiProtected extends BaseMiddleware
             $user = JWTAuth::parseToken()->authenticate();
         } catch (\Exception $exception) {
             if($exception instanceof TokenExpiredException) {
-                return response()->json(['message' => 'Token expirado'],);
+                return response()->json(['message' => 'Token expirado'],401);
             } else if ($exception instanceof TokenInvalidException) {
-                return response()->json(['message' => 'Token invalido']);
+                return response()->json(['message' => 'Token invalido'],401);
             } else {
-                return response(['message' => 'Token não encontrado']);
+                return response(['message' => 'Token não encontrado'],401);
             }
         }
         return $next($request);
