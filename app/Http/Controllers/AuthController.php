@@ -26,5 +26,12 @@ class AuthController extends Controller
             'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
     }
+    public function me() {
+        $user =  auth('api')->user();
+        if($user) {
+            return response()->json(['user'=>$user]);
+        }
+        return response()->json(['message' => 'Erro ao encontrar usuario',404]);
+    }
 
 }

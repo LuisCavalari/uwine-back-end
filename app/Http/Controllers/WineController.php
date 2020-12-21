@@ -20,10 +20,23 @@ class WineController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
+        $orderBy = $request->input('orderBy');
+        $direction = $request->input('direction');
+        $searchTerm = $request->input('searchTerm');
         $userId = auth('api')->user()->id;
-        $wineList = $this->wine::where('user_id', $userId)->get();
+        if($orderBy) {
+            $wineList = $this->wine::where('user_id', $userId)
+                ->where('name', 'like', '%' . $searchTerm . '%')
+                ->orderBy($orderBy,$direction)
+                ->paginate(6);
+            $wineList->appends($_GET)->links();
+        }else {
+            $wineList = $this->wine::where('user_id', $userId)
+               ->where('name', 'like', '%' . $searchTerm . '%')
+               ->paginate(6);
+        }
         return $wineList;
     }
 
@@ -39,7 +52,7 @@ class WineController extends Controller
             $wineData = $request->all();
             $userId = auth('api')->user()->id;
             $wineData['user_id'] = $userId;
-            $this->wine->create($wineData);
+            $this->wine::create($wineData);
             $result = [
                 'message' => 'Vinho inserido com sucesso',
                 'status' => 201
@@ -62,8 +75,7 @@ class WineController extends Controller
     public function show($id)
     {
         try {
-            $wine = $this->wine
-                ->where('id', $id)
+            $wine = $this->wine::where('id', $id)
                 ->get();
             $result = ['data' => $wine, 'status' => 200];
         } catch (\Exception $exception) {
@@ -116,7 +128,7 @@ class WineController extends Controller
                 $wine->delete();
                 return response()->json(['message' => 'Vinho deletado com sucesso']);
             } else {
-                return response()->json(['message' => 'Você não tem permissão para alterar este dado'], 401);
+                return response()->json(['message' => 'Você não tem permissão para alterar este dado'], 403);
             }
         } catch (\Exception $exception) {
             if ($exception instanceof ModelNotFoundException) {

@@ -18,4 +18,5 @@ use App\Http\Controllers\AuthController;
 
 Route::resource('wines',WineController::class)->middleware('apiProtected');
 Route::post('auth/login', [AuthController::class,'login']);
+Route::get('auth/me', [AuthController::class,'me'])->middleware('apiProtected');
 
