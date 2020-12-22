@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Validator;
 use \Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Models\Wine;
 
@@ -26,16 +27,16 @@ class WineController extends Controller
         $direction = $request->input('direction');
         $searchTerm = $request->input('searchTerm');
         $userId = auth('api')->user()->id;
-        if($orderBy) {
+        if ($orderBy) {
             $wineList = $this->wine::where('user_id', $userId)
                 ->where('name', 'like', '%' . $searchTerm . '%')
-                ->orderBy($orderBy,$direction)
+                ->orderBy($orderBy, $direction)
                 ->paginate(6);
             $wineList->appends($_GET)->links();
-        }else {
+        } else {
             $wineList = $this->wine::where('user_id', $userId)
-               ->where('name', 'like', '%' . $searchTerm . '%')
-               ->paginate(6);
+                ->where('name', 'like', '%' . $searchTerm . '%')
+                ->paginate(6);
         }
         return $wineList;
     }
@@ -48,8 +49,25 @@ class WineController extends Controller
      */
     public function store(Request $request)
     {
+        $wineData = $request->all();
+        $rules =  [
+            'name' => 'required|string|max:180',
+            'year' => 'required|numeric|gte:0|lte:' . now()->format('Y'),
+            'description' => 'required|string|max:255',
+            'grade' => 'required|numeric|gte:0|lte:10'
+        ];
+        $validate = Validator::make($wineData, $rules);
+
+        if ($validate->fails()) {
+            return response()->json(
+                [
+                    'message' => 'Erro na validação',
+                    'errors' => $validate->errors()->all()
+                ],
+                422
+            );
+        }
         try {
-            $wineData = $request->all();
             $userId = auth('api')->user()->id;
             $wineData['user_id'] = $userId;
             $this->wine::create($wineData);
@@ -59,7 +77,7 @@ class WineController extends Controller
             ];
         } catch (\Exception $exception) {
             $result = [
-                'message' => 'Houve um erro no registro',
+                'message' => $exception,
                 'status' => 500
             ];
         }
@@ -75,8 +93,12 @@ class WineController extends Controller
     public function show($id)
     {
         try {
-            $wine = $this->wine::where('id', $id)
-                ->get();
+            $userId = auth('api')->user()->id;
+            $wine = $this->wine::where('id',$id)
+                ->where('user_id',$userId)
+                ->first();
+            if(!$wine) 
+                return response()->json(['message' => 'Vinho não encontrado'],404);
             $result = ['data' => $wine, 'status' => 200];
         } catch (\Exception $exception) {
             $result = ['message' => 'Houve um erro ao buscar pelo vinho', 'status' => 500];
@@ -95,7 +117,24 @@ class WineController extends Controller
     public function update(Request $request, $id)
     {
         $updatedWineData = $request->all();
+        $wineData = $request->all();
+        $rules =  [
+            'name' => 'required|string|max:180',
+            'year' => 'required|numeric|gte:0|lte:' . now()->format('Y'),
+            'description' => 'required|string|max:255',
+            'grade' => 'required|numeric|gte:0|lte:10'
+        ];
+        $validate = Validator::make($wineData, $rules);
         $userId = auth('api')->user()->id;
+        if($validate->fails()) {
+             return response()->json(
+                [
+                    'message' => 'Erro na validação',
+                    'errors' => $validate->errors()->all()
+                ],
+                422
+            );
+        }
         try {
             $wine = $this->wine->findOrFail($id);
             if ($wine['user_id'] === $userId) {
@@ -121,6 +160,7 @@ class WineController extends Controller
      */
     public function destroy($id)
     {
+        
         try {
             $wine = $this->wine->findOrFail($id);
             $userId = auth('api')->user()->id;

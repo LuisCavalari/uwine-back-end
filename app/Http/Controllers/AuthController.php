@@ -33,5 +33,8 @@ class AuthController extends Controller
         }
         return response()->json(['message' => 'Erro ao encontrar usuario',404]);
     }
+    public function refresh() {
+        return response()->json(['access_token' => auth('api')->refresh()]);
+    }
 
 }

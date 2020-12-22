@@ -16,7 +16,7 @@ class CreateTableWines extends Migration
         Schema::create('wines', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->year('year');
+            $table->integer('year');
             $table->text('description');
             $table->float('grade');
             $table->foreignId('user_id')
